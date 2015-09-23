@@ -2,11 +2,9 @@
   "name": "dng-test-utils",
   "version": "0.1.0",
   "description": "Angular Test Utilities",
-  "main": "index.js",
   "scripts": {
-    "test": "karma start",
-    "clean": "rm -rf dist && mkdir dist",
-    "build": "npm run clean && babel --modules umd src/test-utils.js > dist/dng-test-utils.js"
+    "test": "npm run build && karma start",
+    "build": "webpack webpack.config.js"
   },
   "keywords": [
     "Angular",
@@ -27,7 +25,13 @@
     "karma": "^0.13.3",
     "karma-browserify": "^4.2.1",
     "karma-chrome-launcher": "^0.2.0",
-    "karma-jasmine": "^0.3.6"
+    "karma-jasmine": "^0.3.6",
+    "karma-sourcemap-loader": "^0.3.6",
+    "karma-webpack": "^1.7.0",
+    "webpack": "^1.12.2"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "browser": {
+    "dng-test-utils": "./dist/dng-test-utils.js"
+  }
 }
