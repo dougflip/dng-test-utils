@@ -4,10 +4,10 @@ const ng = window.angular;
 export function promiseMath ($q) {
   return {
     promiseToSquare (x) {
-      return $q((resolve) => resolve(x * x));
+      return $q(resolve => resolve(x * x));
     },
     promiseToAdd (x, y) {
-      return $q((resolve) => resolve(x + y));
+      return $q(resolve => resolve(x + y));
     }
   }
 }

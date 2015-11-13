@@ -1,9 +1,16 @@
-import promiseGenerator from "./promise-generator";
+import diMock from "./di-mock";
 import nullMock from "./nullmock";
+import promiseGenerator from "./promise-generator";
 
 // FIXME: Is there any way around this?
 const ng = window.angular;
 
-export default ng.module('dngTestUtils', [])
+const dngTestModule = ng.module('dngTestUtils', [])
   .factory('dngDefer', promiseGenerator)
   .factory('dngNullMock', () => nullMock);
+
+export default {
+  name: dngTestModule.name,
+  registerMocks: diMock,
+  nullMock: nullMock
+}
