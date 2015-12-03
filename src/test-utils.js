@@ -14,3 +14,4 @@ export default {
   registerMocks: diMock,
   nullMock: nullMock
 }
+
