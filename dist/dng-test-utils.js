@@ -51,31 +51,26 @@ module.exports =
 	  value: true
 	});
 
-	var _diMock = __webpack_require__(1);
+	var _dngNullMock = __webpack_require__(1);
 
-	var _diMock2 = _interopRequireDefault(_diMock);
+	var _dngNullMock2 = _interopRequireDefault(_dngNullMock);
 
-	var _nullmock = __webpack_require__(2);
+	var _dngDefer = __webpack_require__(2);
 
-	var _nullmock2 = _interopRequireDefault(_nullmock);
-
-	var _promiseGenerator = __webpack_require__(3);
-
-	var _promiseGenerator2 = _interopRequireDefault(_promiseGenerator);
+	var _dngDefer2 = _interopRequireDefault(_dngDefer);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	// FIXME: Is there any way around this?
 	var ng = window.angular;
 
-	var dngTestModule = ng.module('dngTestUtils', []).factory('dngDefer', _promiseGenerator2.default).factory('dngNullMock', function () {
-	  return _nullmock2.default;
+	var dngTestModule = ng.module('dngTestUtils', []).factory('dngDefer', _dngDefer2.default).factory('dngNullMock', function () {
+	  return _dngNullMock2.default;
 	});
 
 	exports.default = {
 	  name: dngTestModule.name,
-	  registerMocks: _diMock2.default,
-	  nullMock: _nullmock2.default
+	  nullMock: _dngNullMock2.default
 	};
 
 /***/ },
@@ -87,13 +82,33 @@ module.exports =
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	var isFunction = window.angular.isFunction;
 
-	exports.default = function (mocks) {
-	  return function ($provide) {
-	    for (var prop in mocks) {
-	      $provide.value(prop, mocks[prop]);
-	    }
-	  };
+	function buildInstance(obj) {
+	  obj = Array.isArray(obj) ? obj[obj.length - 1] : obj;
+	  return obj.constructor === Function ? new obj() : obj;
+	}
+
+	function createDefaultValue(obj, key) {
+	  if (isFunction(obj)) return jasmine.createSpy(key);
+
+	  return Array.isArray(obj) ? [] : null;
+	}
+
+	/**
+	 * Takes an object and returns a mock object.
+	 * The mock will contain a spy for each function on the provided object.
+	 * All properties (anything initialized in the provided object) will be null or []
+	 * in the returned mock.
+	 */
+
+	exports.default = function (obj) {
+	  var mock = {};
+	  var instance = buildInstance(obj);
+	  for (var key in instance) {
+	    mock[key] = createDefaultValue(instance[key], key);
+	  }
+	  return mock;
 	};
 
 /***/ },
@@ -103,54 +118,59 @@ module.exports =
 	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-	var isFunction = window.angular.isFunction;
-
-	function buildInstance(obj) {
-	    obj = Array.isArray(obj) ? obj[obj.length - 1] : obj;
-	    return obj.constructor === Function ? new obj() : obj;
-	}
-
-	function createDefaultValue(obj, key) {
-	    if (isFunction(obj)) return jasmine.createSpy(key);
-
-	    return Array.isArray(obj) ? [] : null;
-	}
-
-	exports.default = function (obj) {
-	    var mock = {};
-	    var instance = buildInstance(obj);
-	    for (var key in instance) {
-	        mock[key] = createDefaultValue(instance[key], key);
-	    }
-	    return mock;
-	};
-
-/***/ },
-/* 3 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
+	/**
+	 * Simplifies working with promises an digest cycles.
+	 * Also provides helpers that are tailored to Jasmine spies.
+	 */
 	exports.default = function ($q, $rootScope) {
-	  function wrapWithDigest(fn, val) {
-	    fn(val);
-	    $rootScope.$digest();
-	  }
 
-	  return function (spy) {
-	    var deferred = $q.defer();
-	    spy.and.returnValue(deferred.promise);
-	    return {
-	      resolveAndDigest: wrapWithDigest.bind(deferred, deferred.resolve),
-	      rejectAndDigest: wrapWithDigest.bind(deferred, deferred.reject)
+	  var wrapWithDigest = function wrapWithDigest(fn) {
+	    return function (val) {
+	      fn(val);
+	      $rootScope.$digest();
 	    };
 	  };
+
+	  var defer = function defer() {
+	    var deferred = $q.defer();
+	    return {
+	      promise: deferred.promise,
+	      resolveAndDigest: wrapWithDigest(deferred.resolve),
+	      rejectAndDigest: wrapWithDigest(deferred.reject)
+	    };
+	  };
+
+	  var configureSpy = function configureSpy(configFn) {
+	    return function (spy) {
+	      var deferred = defer();
+	      spy.and.returnValue(configFn(deferred.promise));
+	      return deferred;
+	    };
+	  };
+
+	  var deferSpy = configureSpy(function (promise) {
+	    return promise;
+	  });
+
+	  var deferSpyWithResult = configureSpy(function (promise) {
+	    return { result: promise };
+	  });
+
+	  function dngDefer(spy) {
+	    console.warn("Using dngDefer as a function is deprecated and will be removed!\n       Instead, please use the deferSpy method");
+	    return deferSpy(spy);
+	  }
+
+	  dngDefer.defer = defer;
+	  dngDefer.deferSpy = deferSpy;
+	  dngDefer.deferSpyWithResult = deferSpyWithResult;
+
+	  // exporting as a function preserves backward compatibility for the time being
+	  // this will most likely become an object in the future though
+	  return dngDefer;
 	};
 
 /***/ }

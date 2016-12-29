@@ -1,10 +1,31 @@
 DNG Test Utils
 ====================
 
-## Purpose
+## Overview
 
-The purpose of this library is to reduce boiler plate in Angular test code.
+Reduces boiler plate in Angular test code.
 Specifically regarding mocking dependencies and working with promises.
 
-This library is still a work in progress, but feel free to look around.
-There will most likely be forced pushes at this point so be warned!
+## Install
+
+```
+npm install -D dng-test-utils
+```
+
+## Setup
+
+You need to reference the module name as part of your test setup:
+
+```
+import dngTestUtils from 'dng-test-utils';
+
+// ...then in your top level describe block...
+
+beforeEach(() => angular.mock.module(dngTestUtils.name));
+```
+
+## More Info
+
+- [Sample Test File](./test/dng-test-utils_test.js) - shows actual setup and use.
+- [Docs](./docs/) - more in depth reading and tips.
+- [Source Code](./src)

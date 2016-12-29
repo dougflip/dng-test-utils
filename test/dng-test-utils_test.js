@@ -1,5 +1,5 @@
-import dngTestUtils from '../src/test-utils';
-import sampleModule, { promiseMath } from './test-module';
+import dngTestUtils from '../src/dng-test-utils';
+import sampleModule from './test-module';
 
 describe('DngTestUtils', () => {
 
@@ -10,37 +10,111 @@ describe('DngTestUtils', () => {
   beforeEach(ngMock.module(sampleModule.name));
 
   beforeEach(() => {
-    // Create a single "mock" object to identify all of our dependencies
-    // The property names need to match the actual dependency names
-    //  because diMock will use the property names to register them with DI
-    // So in this example a dependency/provider named "promiseMath"
     mocks = {
-      promiseMath: dngTestUtils.nullMock(promiseMath)
-    }
+      promiseMath: dngTestUtils.nullMock(sampleModule.promiseMath)
+    };
 
-    ngMock.module(dngTestUtils.registerMocks(mocks));
+    ngMock.module(mocks);
   });
 
-  describe('promiseGenerator', () => {
+  describe('dngDefer', () => {
+    // Ensuring that deprecated usage is still supported (for now).
+    describe('Using as a function should still work for backwards compatibility', () => {
+      let promiseToSquare;
 
-    let promiseToSquare;
+      beforeEach(ngMock.inject(dngDefer => {
+        promiseToSquare = dngDefer(mocks.promiseMath.promiseToSquare);
+      }));
 
-    beforeEach(ngMock.inject(dngDefer => {
-      // This sets up any Jasmine spy to properly return a wrapped deferred
-      //  { resolveAndDigest, rejectAndDigest }
-      promiseToSquare = dngDefer(mocks.promiseMath.promiseToSquare);
-    }));
+      it('should create a deferred which can be resolved', done => {
+        mocks.promiseMath.promiseToSquare().then(x => {
+          expect(x).toBe('value');
+          done();
+        });
+        promiseToSquare.resolveAndDigest('value');
+      });
 
-    it('should create a deferred which can be resolved', done => {
-      mocks.promiseMath.promiseToSquare().then(done);
-      promiseToSquare.resolveAndDigest();
+      it('should create a deferred which can be rejected', done => {
+        mocks.promiseMath.promiseToSquare().catch(x => {
+          expect(x).toBe('error');
+          done();
+        });
+        promiseToSquare.rejectAndDigest('error');
+      });
     });
 
-    it('should create a deferred which can be rejected', done => {
-      mocks.promiseMath.promiseToSquare().catch(done);
-      promiseToSquare.rejectAndDigest();
+    describe('defer', () => {
+      let deferred;
+
+      beforeEach(ngMock.inject(dngDefer => {
+        deferred = dngDefer.defer();
+      }));
+
+      it('should create a deferred which can be resolved', done => {
+        deferred.promise.then(x => {
+          expect(x).toBe('value');
+          done();
+        });
+        deferred.resolveAndDigest('value');
+      });
+
+      it('should create a deferred which can be rejected', done => {
+        deferred.promise.catch(x => {
+          expect(x).toBe('error');
+          done();
+        });
+        deferred.rejectAndDigest('error');
+      });
     });
 
+    describe('deferSpy', () => {
+      let promiseToSquare;
+
+      beforeEach(ngMock.inject(dngDefer => {
+        promiseToSquare = dngDefer.deferSpy(mocks.promiseMath.promiseToSquare);
+      }));
+
+      it('should create a deferred which can be resolved', done => {
+        mocks.promiseMath.promiseToSquare().then(x => {
+          expect(x).toBe('value');
+          done();
+        });
+        promiseToSquare.resolveAndDigest('value');
+      });
+
+      it('should create a deferred which can be rejected', done => {
+        mocks.promiseMath.promiseToSquare().catch(x => {
+          expect(x).toBe('error');
+          done();
+        });
+        promiseToSquare.rejectAndDigest('error');
+      });
+    });
+
+    describe('deferSpyWithResult', () => {
+      let modalSpy;
+      let modalDeferred;
+
+      beforeEach(ngMock.inject(dngDefer => {
+        modalSpy = jasmine.createSpyObj('modalSpy', ['open']);
+        modalDeferred = dngDefer.deferSpyWithResult(modalSpy.open);
+      }));
+
+      it('should create a deferred under a "result" property which can be resolved', done => {
+        modalSpy.open().result.then(x => {
+          expect(x).toBe('value');
+          done();
+        });
+        modalDeferred.resolveAndDigest('value');
+      });
+
+      it('should create a deferred under a "result" property which can be rejected', done => {
+        modalSpy.open().result.catch(x => {
+          expect(x).toBe('error');
+          done();
+        });
+        modalDeferred.rejectAndDigest('error');
+      });
+    });
   });
-
 });
