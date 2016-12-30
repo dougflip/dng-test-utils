@@ -59,6 +59,10 @@ module.exports =
 
 	var _dngDefer2 = _interopRequireDefault(_dngDefer);
 
+	var _dngModule = __webpack_require__(3);
+
+	var _dngModule2 = _interopRequireDefault(_dngModule);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	// FIXME: Is there any way around this?
@@ -70,7 +74,8 @@ module.exports =
 
 	exports.default = {
 	  name: dngTestModule.name,
-	  nullMock: _dngNullMock2.default
+	  nullMock: _dngNullMock2.default,
+	  init: _dngModule2.default.init
 	};
 
 /***/ },
@@ -115,7 +120,7 @@ module.exports =
 /* 2 */
 /***/ function(module, exports) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -160,7 +165,7 @@ module.exports =
 	  });
 
 	  function dngDefer(spy) {
-	    console.warn("Using dngDefer as a function is deprecated and will be removed!\n       Instead, please use the deferSpy method");
+	    console.warn('Using dngDefer as a function is deprecated please use dngDefer.deferSpy instead.');
 	    return deferSpy(spy);
 	  }
 
@@ -171,6 +176,103 @@ module.exports =
 	  // exporting as a function preserves backward compatibility for the time being
 	  // this will most likely become an object in the future though
 	  return dngDefer;
+	};
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	/**
+	 * This will eventually just become the dng-test-utils file I think.
+	 * I need to consider backwards compatibility, but this will be the way to
+	 *  set up a test moving forward.
+	 */
+	var angular = window.angular;
+	var ngMock = window.angular.mock;
+
+	/**
+	 * Creates a single injectable object `dngMocks` which will contain ALL your null mocks.
+	 * This is helpful to alias to a local variable inside your test file so that
+	 * you can easily get access to sutMocks:
+	 *    `beforeEach(ngMock.inject(dngMocks => sutMocks = dngMocks));`
+	 * Now in your tests you can do something like:
+	 *    `promiseToSquare = dngDefer(sutMocks.promiseMath.promiseToSquare);`
+	 * without the need to inject `dngMocks` everywhere.
+	 */
+	var createDngMocks = function createDngMocks(nullMocks, customMocks) {
+	  return function ($injector) {
+	    return angular.extend({}, customMocks, nullMocks.reduce(function (acc, x) {
+	      return angular.extend(_defineProperty({}, x, $injector.get(x)), acc);
+	    }, {}));
+	  };
+	};
+
+	/**
+	 * Registers a module with Angular and includes the provided module you are
+	 * testing as a dependency.
+	 * This allows us to accomplish nullmock magic via decorators.
+	 *
+	 * NOTE: You should use this OR register dngTestUtils by hand.
+	 */
+	var createTestModule = function createTestModule(deps) {
+	  var nullMocks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+	  var customMocks = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+	  return angular.module('dngTestUtils.module', deps.concat('dngTestUtils')).factory('dngMocks', createDngMocks(nullMocks, customMocks));
+	};
+
+	/**
+	 * This function puts it all together.
+	 * It will register the module, set up the decorators, and register with ng-mocks.
+	 */
+	var registerAll = function registerAll(deps, nullMocks) {
+	  var customMocks = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+	  var testMod = createTestModule(deps, nullMocks);
+
+	  // use decorators to wrap requested dependencies with nullMock
+	  nullMocks.forEach(function (x) {
+	    return testMod.decorator(x, function ($delegate, dngNullMock) {
+	      return dngNullMock($delegate);
+	    });
+	  });
+
+	  // register the module with ngMock
+	  ngMock.module(testMod.name);
+
+	  // register customMocks (those that aren't nullMocked but need to exist)
+	  ngMock.module(customMocks);
+	};
+
+	/**
+	 * Convenience wrapper over `register` to return it as a function.
+	 * This is nice when using in `beforeEach` calls that expect a function.
+	 */
+	var initAll = function initAll(deps) {
+	  var nullMocks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+	  var customMocks = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+	  return function () {
+	    return registerAll(deps, nullMocks, customMocks);
+	  };
+	};
+
+	var init = function init(moduleUnderTestName) {
+	  var nullMocks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+	  var customMocks = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+	  return initAll([moduleUnderTestName], nullMocks, customMocks);
+	};
+
+	exports.default = {
+	  initAll: initAll,
+	  init: init
 	};
 
 /***/ }

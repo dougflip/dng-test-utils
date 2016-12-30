@@ -33,10 +33,7 @@ export default ($q, $rootScope) => {
   const deferSpyWithResult = configureSpy(promise => ({ result: promise }));
 
   function dngDefer(spy) {
-    console.warn(
-      `Using dngDefer as a function is deprecated and will be removed!
-       Instead, please use the deferSpy method`
-    );
+    console.warn('Using dngDefer as a function is deprecated please use dngDefer.deferSpy instead.');
     return deferSpy(spy);
   }
 
