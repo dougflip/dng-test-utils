@@ -14,18 +14,20 @@ npm install -D dng-test-utils
 
 ## Setup
 
-You need to reference the module name as part of your test setup:
+The bare bones setup looks something like this:
 
 ```
 import dngTestUtils from 'dng-test-utils';
+import moduleToTest from './module-to-test';
 
 // ...then in your top level describe block...
 
-beforeEach(() => angular.mock.module(dngTestUtils.name));
+beforeEach(dngTestUtils.init(moduleToTest.name, [nullMocks], { customMocks }));
 ```
+
+The [sample test file](./test/dng-test-utils_test.js) has much more detail.
 
 ## More Info
 
-- [Sample Test File](./test/dng-test-utils_test.js) - shows actual setup and use.
 - [Docs](./docs/) - more in depth reading and tips.
 - [Source Code](./src)
