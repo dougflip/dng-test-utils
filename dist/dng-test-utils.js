@@ -236,7 +236,7 @@ module.exports =
 	var registerAll = function registerAll(deps, nullMocks) {
 	  var customMocks = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-	  var testMod = createTestModule(deps, nullMocks);
+	  var testMod = createTestModule(deps, nullMocks, customMocks);
 
 	  // use decorators to wrap requested dependencies with nullMock
 	  nullMocks.forEach(function (x) {

@@ -41,7 +41,7 @@ const createTestModule = (deps, nullMocks = [], customMocks = {}) => {
  * It will register the module, set up the decorators, and register with ng-mocks.
  */
 const registerAll = (deps, nullMocks, customMocks = {}) => {
-  const testMod = createTestModule(deps, nullMocks);
+  const testMod = createTestModule(deps, nullMocks, customMocks);
 
   // use decorators to wrap requested dependencies with nullMock
   nullMocks.forEach(x => testMod.decorator(x, ($delegate, dngNullMock) => dngNullMock($delegate)));
