@@ -47,6 +47,20 @@ describe('DngTestUtils', () => {
    */
   beforeEach(ngMock.inject(dngMocks => sutMocks = dngMocks));
 
+  /**
+   * Verify that `dngMocks` (aliased to sutMocks in this test) has BOTH null mocks
+   * and custom mocks as part of the object.
+   */
+  describe('dngMocks', () => {
+    it('should include nullMocks', () => {
+      expect(sutMocks.promiseMath).toBeDefined();
+    });
+
+    it('should include customMocks', () => {
+      expect(sutMocks.customDependency).toBeDefined();
+    });
+  });
+
   describe('dngDefer', () => {
     describe('defer', () => {
       let deferred;
