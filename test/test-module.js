@@ -4,6 +4,7 @@
  *  - bootstrapping modules (in a test)
  *  - working with null mock
  *  - working with promises
+ *  - working with components
  */
 const ng = window.angular;
 
@@ -14,8 +15,8 @@ function promiseMathLegacy($q) {
     },
     promiseToAdd(x, y) {
       return $q(resolve => resolve(x + y));
-    }
-  }
+    },
+  };
 }
 
 function promiseMath($q) {
@@ -29,12 +30,20 @@ function promiseMath($q) {
   return promiseMathLegacy($q);
 }
 
-const name = ng.module('dngTestModule', [])
+const sayHelloComponent = {
+  bindings: {
+    name: '<',
+  },
+  template: `<div><h1>Hello {{$ctrl.name}}!</h1></div>`,
+};
+
+const name = ng
+  .module('dngTestModule', [])
   .factory('promiseMathLegacy', promiseMathLegacy)
   .factory('promiseMath', promiseMath)
-  .name;
+  .component('sayHello', sayHelloComponent).name;
 
 export default {
   name,
-  promiseMathLegacy
-}
+  promiseMathLegacy,
+};

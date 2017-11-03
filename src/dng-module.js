@@ -16,11 +16,19 @@ const ngMock = window.angular.mock;
  * without the need to inject `dngMocks` everywhere.
  */
 const createDngMocks = (nullMocks, customMocks) => $injector => {
-  return angular.extend({},
+  return angular.extend(
+    {},
     customMocks,
-    nullMocks.reduce((acc, x) => angular.extend({
-      [x]: $injector.get(x)
-    }, acc), {})
+    nullMocks.reduce(
+      (acc, x) =>
+        angular.extend(
+          {
+            [x]: $injector.get(x),
+          },
+          acc
+        ),
+      {}
+    )
   );
 };
 
@@ -32,7 +40,8 @@ const createDngMocks = (nullMocks, customMocks) => $injector => {
  * NOTE: You should use this OR register dngTestUtils by hand.
  */
 const createTestModule = (deps, nullMocks = [], customMocks = {}) => {
-  return angular.module('dngTestUtils.module', deps.concat('dngTestUtils'))
+  return angular
+    .module('dngTestUtils.module', deps.concat('dngTestUtils'))
     .factory('dngMocks', createDngMocks(nullMocks, customMocks));
 };
 
@@ -50,20 +59,24 @@ const registerAll = (deps, nullMocks, customMocks = {}) => {
   ngMock.module(testMod.name);
 
   // register customMocks (those that aren't nullMocked but need to exist)
-  ngMock.module(customMocks)
-}
+  ngMock.module(customMocks);
+};
 
 /**
  * Convenience wrapper over `register` to return it as a function.
  * This is nice when using in `beforeEach` calls that expect a function.
  */
-const initAll = (deps, nullMocks = [], customMocks = {}) =>
-  () => registerAll(deps, nullMocks, customMocks);
+const initAll = (deps, nullMocks = [], customMocks = {}) => () =>
+  registerAll(deps, nullMocks, customMocks);
 
 const init = (moduleUnderTestName, nullMocks = [], customMocks = {}) =>
   initAll([moduleUnderTestName], nullMocks, customMocks);
 
+const initWithKarmaTemplates = (moduleUnderTestName, nullMocks = [], customMocks = {}) =>
+  initAll([moduleUnderTestName, 'karmaTemplates'], nullMocks, customMocks);
+
 export default {
   initAll,
-  init
-}
+  init,
+  initWithKarmaTemplates,
+};

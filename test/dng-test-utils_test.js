@@ -22,7 +22,7 @@ describe('DngTestUtils', () => {
    * This is essentially forwarded to angular.mock.module
    */
   const customMocks = {
-    customDependency: jasmine.createSpyObj('localDep', ['methodName'])
+    customDependency: jasmine.createSpyObj('localDep', ['methodName']),
   };
 
   /**
@@ -34,9 +34,11 @@ describe('DngTestUtils', () => {
    * You probably won't need to do module stuff anymore
    * But this is here just to ensure it works in case it is needed.
    */
-  beforeEach(ngMock.module($provide => {
-    // just making sure this is available if needed...
-  }));
+  beforeEach(
+    ngMock.module($provide => {
+      // just making sure this is available if needed...
+    })
+  );
 
   /**
    * The call to `dngTestUtils.init` creates a new injectable named `dngMocks`.
@@ -45,7 +47,7 @@ describe('DngTestUtils', () => {
    * in the specific places where you need it.
    * We'll alias in this example.
    */
-  beforeEach(ngMock.inject(dngMocks => sutMocks = dngMocks));
+  beforeEach(ngMock.inject(dngMocks => (sutMocks = dngMocks)));
 
   /**
    * Verify that `dngMocks` (aliased to sutMocks in this test) has BOTH null mocks
@@ -65,9 +67,11 @@ describe('DngTestUtils', () => {
     describe('defer', () => {
       let deferred;
 
-      beforeEach(ngMock.inject(dngDefer => {
-        deferred = dngDefer.defer();
-      }));
+      beforeEach(
+        ngMock.inject(dngDefer => {
+          deferred = dngDefer.defer();
+        })
+      );
 
       it('should create a deferred which can be resolved', done => {
         deferred.promise.then(x => {
@@ -89,9 +93,11 @@ describe('DngTestUtils', () => {
     describe('deferSpy', () => {
       let promiseToSquare;
 
-      beforeEach(ngMock.inject(dngDefer => {
-        promiseToSquare = dngDefer.deferSpy(sutMocks.promiseMath.promiseToSquare);
-      }));
+      beforeEach(
+        ngMock.inject(dngDefer => {
+          promiseToSquare = dngDefer.deferSpy(sutMocks.promiseMath.promiseToSquare);
+        })
+      );
 
       it('should create a deferred which can be resolved', done => {
         sutMocks.promiseMath.promiseToSquare().then(x => {
@@ -114,10 +120,12 @@ describe('DngTestUtils', () => {
       let modalSpy;
       let modalDeferred;
 
-      beforeEach(ngMock.inject(dngDefer => {
-        modalSpy = jasmine.createSpyObj('modalSpy', ['open']);
-        modalDeferred = dngDefer.deferSpyWithResult(modalSpy.open);
-      }));
+      beforeEach(
+        ngMock.inject(dngDefer => {
+          modalSpy = jasmine.createSpyObj('modalSpy', ['open']);
+          modalDeferred = dngDefer.deferSpyWithResult(modalSpy.open);
+        })
+      );
 
       it('should create a deferred under a "result" property which can be resolved', done => {
         modalSpy.open().result.then(x => {
@@ -134,6 +142,35 @@ describe('DngTestUtils', () => {
         });
         modalDeferred.rejectAndDigest('error');
       });
+    });
+  });
+
+  /**
+   * Very basic example of creating a component with bindings in order to inspect the HTML.
+   * I'll add more eventually, but wanted at least something basic to get this out.
+   * See [dng-component](../src/dng-component) for the full API
+   */
+  describe('dngComponent', () => {
+    let $el;
+    let scope;
+    let digest;
+
+    beforeEach(
+      ngMock.inject(dngComponent => {
+        digest = dngComponent.digest;
+        const bindings = { name: 'World' };
+        const markup = `<say-hello name="name"></say-hello>`;
+        ({ $el, scope } = dngComponent.createWithBindings(markup, bindings));
+      })
+    );
+
+    it('should properly create the component', () => {
+      expect($el.text()).toContain('Hello World!');
+    });
+
+    it('should provide a digest helper to test updates', () => {
+      digest(() => (scope.name = 'Angular'));
+      expect($el.text()).toContain('Hello Angular!');
     });
   });
 });

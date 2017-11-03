@@ -45,7 +45,7 @@ module.exports =
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -59,7 +59,11 @@ module.exports =
 
 	var _dngDefer2 = _interopRequireDefault(_dngDefer);
 
-	var _dngModule = __webpack_require__(3);
+	var _dngComponent = __webpack_require__(3);
+
+	var _dngComponent2 = _interopRequireDefault(_dngComponent);
+
+	var _dngModule = __webpack_require__(4);
 
 	var _dngModule2 = _interopRequireDefault(_dngModule);
 
@@ -68,14 +72,15 @@ module.exports =
 	// FIXME: Is there any way around this?
 	var ng = window.angular;
 
-	var dngTestModule = ng.module('dngTestUtils', []).factory('dngDefer', _dngDefer2.default).factory('dngNullMock', function () {
+	var dngTestModule = ng.module('dngTestUtils', []).factory('dngDefer', _dngDefer2.default).factory('dngComponent', _dngComponent2.default).factory('dngNullMock', function () {
 	  return _dngNullMock2.default;
 	});
 
 	exports.default = {
 	  name: dngTestModule.name,
 	  nullMock: _dngNullMock2.default,
-	  init: _dngModule2.default.init
+	  init: _dngModule2.default.init,
+	  initWithKarmaTemplates: _dngModule2.default.initWithKarmaTemplates
 	};
 
 /***/ },
@@ -182,6 +187,55 @@ module.exports =
 /* 3 */
 /***/ function(module, exports) {
 
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var angular = window.angular;
+
+	exports.default = function ($rootScope, $compile) {
+	  function digest(fn) {
+	    fn();
+	    $rootScope.$digest();
+	  }
+
+	  function createScope() {
+	    var bindings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+	    var scope = $rootScope.$new();
+	    return angular.extend(scope, bindings);
+	  }
+
+	  function createWithScope(markup, scope) {
+	    var $el = $compile(angular.element(markup))(scope);
+	    $rootScope.$digest();
+	    return $el;
+	  }
+
+	  function createWithBindings(markup, bindings) {
+	    var scope = createScope(bindings);
+	    var $el = createWithScope(markup, scope);
+	    return { $el: $el, scope: scope };
+	  }
+
+	  function create(markup) {
+	    return createWithScope(markup, createScope());
+	  }
+
+	  return {
+	    digest: digest,
+	    createScope: createScope,
+	    createWithScope: createWithScope,
+	    createWithBindings: createWithBindings,
+	    create: create
+	  };
+	};
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
@@ -270,9 +324,16 @@ module.exports =
 	  return initAll([moduleUnderTestName], nullMocks, customMocks);
 	};
 
+	var initWithKarmaTemplates = function initWithKarmaTemplates(moduleUnderTestName) {
+	  var nullMocks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+	  var customMocks = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+	  return initAll([moduleUnderTestName, 'karmaTemplates'], nullMocks, customMocks);
+	};
+
 	exports.default = {
 	  initAll: initAll,
-	  init: init
+	  init: init,
+	  initWithKarmaTemplates: initWithKarmaTemplates
 	};
 
 /***/ }
