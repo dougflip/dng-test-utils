@@ -210,13 +210,12 @@ module.exports =
 	  function createWithScope(markup, scope) {
 	    var $el = $compile(angular.element(markup))(scope);
 	    $rootScope.$digest();
-	    return $el;
+	    var isolateScope = $el.isolateScope();
+	    return { $el: $el, scope: scope, isolateScope: isolateScope };
 	  }
 
 	  function createWithBindings(markup, bindings) {
-	    var scope = createScope(bindings);
-	    var $el = createWithScope(markup, scope);
-	    return { $el: $el, scope: scope };
+	    return createWithScope(markup, createScope(bindings));
 	  }
 
 	  function create(markup) {
